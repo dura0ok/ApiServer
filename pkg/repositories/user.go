@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"log"
 	"simple/pkg/driver"
 	model "simple/pkg/models"
 )
@@ -19,6 +20,17 @@ func NewUsersRepository() *UsersRepository {
 	}
 	return &UsersRepository{db: connection}
 }
+
+func (u UsersRepository) UserCount(email string) (uint, error){
+	var count uint
+	row := u.db.QueryRow("SELECT COUNT(*) as cnt FROM users where users.email = ?", email)
+	err := row.Scan(&count)
+	if err != nil{
+		return 0, err
+	}
+	return count, nil
+}
+
 
 func (u UsersRepository) FetchAll() []model.User {
 	rows, err := u.db.Query("select * from users")
@@ -39,4 +51,13 @@ func (u UsersRepository) FetchAll() []model.User {
 	}
 	return users
 
+}
+
+func (u UsersRepository) Store(user model.User) error{
+	log.Println(user)
+	_, err := u.db.Exec("INSERT INTO users (email, password) VALUES(?, ?)", user.Email, user.Password)
+	if err != nil{
+		return err
+	}
+	return nil
 }

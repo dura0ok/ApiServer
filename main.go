@@ -17,6 +17,7 @@ func main() {
 
 	fmt.Println("Server is started....")
 	http.HandleFunc("/api/users", userController.GetUsers)
+	http.HandleFunc("/api/users/register", userController.Register)
 	err := http.ListenAndServe(":3000", nil)
 	if err != nil {
 		panic(err)

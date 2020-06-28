@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"simple/pkg/services"
@@ -17,6 +18,36 @@ func NewUserController(userService services.UserService) *UserController {
 func (u UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	users := u.UserService.GetAll()
 	err := services.GoodResponse(w, users)
+	if err != nil{
+		log.Fatalln(err)
+	}
+}
+
+func (u UserController) Register(w http.ResponseWriter, r *http.Request) {
+	if !services.CheckRequestMethod(*r, "POST"){
+		err := services.BadResponse(w, errors.New("this method for this route is not supported").Error())
+		if err != nil{
+			log.Fatalln(err)
+			return
+		}
+	}
+	user, err := u.UserService.GenerateUser(w, *r)
+	if err != nil{
+		_ = services.BadResponse(w, errors.New("generate user error :(").Error())
+		log.Fatalln(err)
+		return
+	}
+	userExists, err := u.UserService.UserExists(user.Email)
+	if err != nil{
+		log.Fatalln(err)
+		return
+	}
+	if userExists{
+		services.BadResponse(w, errors.New("user with this email already exists").Error())
+		return
+	}
+	_ = u.UserService.InsertUser(user)
+	err = services.GoodResponse(w, "ok")
 	if err != nil{
 		log.Fatalln(err)
 	}
