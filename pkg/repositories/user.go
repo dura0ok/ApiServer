@@ -53,6 +53,16 @@ func (u UsersRepository) FetchAll() []model.User {
 
 }
 
+func (u UsersRepository) GetUserByEmail(email string) (model.User, error) {
+	var user model.User
+	row := u.db.QueryRow("SELECT * FROM users where email = ?", email)
+	err := row.Scan(&user.Id, &user.Email, &user.Password, &user.CreatedAt)
+	if err != nil{
+		return user, err
+	}
+	return user, nil
+}
+
 func (u UsersRepository) Store(user model.User) error{
 	log.Println(user)
 	_, err := u.db.Exec("INSERT INTO users (email, password) VALUES(?, ?)", user.Email, user.Password)

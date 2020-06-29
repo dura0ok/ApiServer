@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"simple/pkg/models"
@@ -21,7 +22,7 @@ func (s UserService) generateHashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s UserService) GenerateUser(w http.ResponseWriter, r http.Request) (models.User, error) {
+func (s UserService) GenerateUser(r http.Request) (models.User, error) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil{
@@ -39,6 +40,25 @@ func (s UserService) UserExists(email string) (bool, error){
 		return true, nil
 	}
 	return false, nil
+}
+
+func (s UserService) CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+
+func (s UserService) AuthUser(requestUser models.User) (bool, error) {
+	user, err := s.repo.GetUserByEmail(requestUser.Email)
+	if err != nil{
+		return false, err
+	}
+	if s.CheckPasswordHash(requestUser.Password, user.Password){
+		return true, nil
+	}
+	return false, nil
+
+
 }
 
 func (s *UserService)GetAll() []models.User {

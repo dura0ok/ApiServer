@@ -23,15 +23,14 @@ func (u UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
 func (u UserController) Register(w http.ResponseWriter, r *http.Request) {
-	if !services.CheckRequestMethod(*r, "POST"){
-		err := services.BadResponse(w, errors.New("this method for this route is not supported").Error())
-		if err != nil{
-			log.Fatalln(err)
-			return
-		}
+	check, err := services.CheckRequestMethod(*r, w, "POST")
+	if !check{
+		return
 	}
-	user, err := u.UserService.GenerateUser(w, *r)
+
+	user, err := u.UserService.GenerateUser(*r)
 	if err != nil{
 		_ = services.BadResponse(w, errors.New("generate user error :(").Error())
 		log.Fatalln(err)
@@ -51,4 +50,28 @@ func (u UserController) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil{
 		log.Fatalln(err)
 	}
+}
+
+func (u UserController) Login(w http.ResponseWriter, r *http.Request) {
+	check, err := services.CheckRequestMethod(*r, w, "POST")
+	if !check{
+		return
+	}
+	user, err := u.UserService.GenerateUser(*r)
+	if err != nil{
+		err := services.BadResponse(w, errors.New("we can't read your data :(").Error())
+		if err != nil{
+			log.Fatalln(err)
+		}
+		return
+	}
+	logged, err := u.UserService.AuthUser(user)
+	if err != nil{
+		//log.Fatalln(err)
+	}
+	if logged{
+		services.GoodResponse(w, "Вы авторизованы :D")
+		return
+	}
+	services.BadResponse(w, "Ошибка авторизации")
 }
