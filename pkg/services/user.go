@@ -2,11 +2,12 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"simple/pkg/models"
 	"simple/pkg/repositories"
+	"time"
 )
 
 type UserService struct {
@@ -47,17 +48,30 @@ func (s UserService) CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+func (s UserService) generateToken(user models.User) (string, error){
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["id"] = user.Id
+	claims["email"] = user.Email
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	t, err := token.SignedString([]byte("secret"))
+	if err != nil{
+		return "", err
+	}
+	return t, nil
+}
 
-func (s UserService) AuthUser(requestUser models.User) (bool, error) {
+
+func (s UserService) AuthUser(requestUser models.User) (string, error) {
 	user, err := s.repo.GetUserByEmail(requestUser.Email)
 	if err != nil{
-		return false, err
+		return "", err
 	}
 	if s.CheckPasswordHash(requestUser.Password, user.Password){
-		return true, nil
+		token, err := s.generateToken(user)
+		return token, err
 	}
-	return false, nil
-
+	return "", nil
 
 }
 

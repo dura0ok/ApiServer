@@ -65,13 +65,18 @@ func (u UserController) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	logged, err := u.UserService.AuthUser(user)
+	token, err := u.UserService.AuthUser(user)
 	if err != nil{
-		//log.Fatalln(err)
+		log.Fatalln(err)
 	}
-	if logged{
-		services.GoodResponse(w, "Вы авторизованы :D")
+	if token != ""{
+		_ = services.GoodResponse(w, map[string]string{"token": token})
 		return
 	}
-	services.BadResponse(w, "Ошибка авторизации")
+	_ = services.BadResponse(w, "Ошибка авторизации")
+}
+
+func (u UserController) User(w http.ResponseWriter, r *http.Request) {
+	services.GoodResponse(w, map[string]string{"message": "ok"})
+
 }
