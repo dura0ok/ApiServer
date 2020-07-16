@@ -77,6 +77,7 @@ func (u UserController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserController) User(w http.ResponseWriter, r *http.Request) {
-	services.GoodResponse(w, map[string]string{"message": "ok"})
+	user := r.Context().Value("user")
+	services.GoodResponse(w, user)
 
 }

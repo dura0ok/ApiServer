@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
@@ -25,7 +26,10 @@ func RequireAuthentication() func(http.Handler) http.Handler{
 				http.Error(h, "Not aaa", 401)
 				return
 			}
-			fmt.Println(claims["email"])
+			delete(claims, "exp")
+			ctx := context.WithValue(req.Context(), "user", claims)
+			fmt.Println("Creating context :D")
+			next.ServeHTTP(h, req.WithContext(ctx))
 		})
 	}
 }
